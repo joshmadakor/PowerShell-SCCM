@@ -12,7 +12,7 @@ Function install_CM($setupFile, $scriptFile) {
 }
 
 Function install_CM_Module() {
-    cmd.exe /c msiexec.exe /i $CM_MODULE_SETUP_LOCATION;
+    cmd.exe /c msiexec.exe /i $CM_MODULE_SETUP_LOCATION /qn;
 }
 
 Function import_CM_Module() {
