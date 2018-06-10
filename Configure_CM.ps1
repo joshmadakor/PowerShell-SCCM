@@ -17,6 +17,7 @@ Function setup_SCCM_Service_Account($username, $password) {
 }
 
 Function setup_Discovery_Method_System($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
+    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
     Set-CMDiscoveryMethod -ActiveDirectorySystemDiscovery `
                       -SiteCode $siteCode `
                       -Enabled $true `
@@ -30,6 +31,7 @@ Function setup_Discovery_Method_System($siteCode, $deltaDiscoveryMinutes, $ldapS
 
 
 Function setup_Discovery_Method_User($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
+    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
     Set-CMDiscoveryMethod -ActiveDirectoryUserDiscovery `
                       -SiteCode $siteCode `
                       -Enabled $true `
@@ -42,6 +44,7 @@ Function setup_Discovery_Method_User($siteCode, $deltaDiscoveryMinutes, $ldapSea
 }
 
 Function setup_Discovery_Method_Group($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
+    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
     Set-CMDiscoveryMethod -ActiveDirectoryGroupDiscovery `
                       -SiteCode $siteCode `
                       -Enabled $true `
