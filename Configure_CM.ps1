@@ -45,15 +45,12 @@ Function setup_Discovery_Method_User($siteCode, $deltaDiscoveryMinutes, $ldapSea
 
 Function setup_Discovery_Method_Group($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
     $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
+    $ADGroupDiscoveryScope = New-CMADGroupDiscoveryScope -Name "Domain Root" -LdapLocation $ldapSearchScope -RecursiveSearch $false;
     Set-CMDiscoveryMethod -ActiveDirectoryGroupDiscovery `
-                      -SiteCode $siteCode `
-                      -Enabled $true `
-                      -PollingSchedule $Schedule `
-                      -EnableDeltaDiscovery $true `
-                      -DeltaDiscoveryMins $deltaDiscoveryMinutes `
-                      -ActiveDirectoryContainer $ldapSearchScope `
-                      -Recursive `
-                      -IncludeGroup
+                          -SiteCode $siteCode `
+                          -Enabled $true `
+                          -AddGroupDiscoveryScope $ADGroupDiscoveryScope `
+                          -PollingSchedule $Schedule;
 }
 
 Function setup_Boundaries() {
