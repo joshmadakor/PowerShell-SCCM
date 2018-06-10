@@ -29,7 +29,6 @@ Function setup_Discovery_Method_System($siteCode, $deltaDiscoveryMinutes, $ldapS
                       -IncludeGroup
 }
 
-
 Function setup_Discovery_Method_User($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
     $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
     Set-CMDiscoveryMethod -ActiveDirectoryUserDiscovery `
@@ -44,7 +43,7 @@ Function setup_Discovery_Method_User($siteCode, $deltaDiscoveryMinutes, $ldapSea
 }
 
 Function setup_Discovery_Method_Group($siteCode, $deltaDiscoveryMinutes, $ldapSearchScope) {
-    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount 10
+    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2099/10/20 00:00:00" -RecurCount $deltaDiscoveryMinutes
     $ADGroupDiscoveryScope = New-CMADGroupDiscoveryScope -Name "Domain Root" -LdapLocation $ldapSearchScope -RecursiveSearch $false;
     Set-CMDiscoveryMethod -ActiveDirectoryGroupDiscovery `
                           -SiteCode $siteCode `
@@ -53,12 +52,46 @@ Function setup_Discovery_Method_Group($siteCode, $deltaDiscoveryMinutes, $ldapSe
                           -PollingSchedule $Schedule;
 }
 
-Function setup_Boundaries() {
-
+Function clear_All_Discovery_Methods($ldapSearchScope) {
+    Set-CMDiscoveryMethod -ActiveDirectorySystemDiscovery -RemoveActiveDirectoryContainer $ldapSearchScope -Enabled $false;
+    Set-CMDiscoveryMethod -ActiveDirectoryUserDiscovery -RemoveActiveDirectoryContainer $ldapSearchScope -Enabled $false;
+    
+    <# Delete all location data for AD Group Discovery Method #>
+    $propertyLists = (Get-CMDiscoveryMethod | Select *).PropLists;
+    foreach ($propList in $propertyLists) {
+        if ($propList.PropertyListName -like "*:*") {
+            $discoveryGroupScopeName = ($propList.PropertyListName -split ":")[1]
+        }
+    }
+    
+    Set-CMDiscoveryMethod -ActiveDirectoryGroupDiscovery -RemoveGroupDiscoveryScope $discoveryGroupScopeName -Enabled $false;
 }
 
-Function setup_Boundary_Groups() {
+Function create_IP_Subnet_Boundary($boundaryName, $boundaryNetworkID) {
+    New-CMBoundary -Name $boundaryName -Type IPSubnet -value $boundaryNetworkID;
+}
 
+Function create_Site_System_Server($siteSystemServerName, $accountToCreateServer) {
+    New-CMSiteSystemServer -SiteCode $CM_SITE_CODE -SiteSystemServerName $siteSystemServerName -PublicFqdn $siteSystemServerName -AccountName $accountToCreateServer;
+}
+
+Function add_Distribution_Point($dpName, $boundaryGroupName) {
+    $DP = (Get-CMSiteSystemServer | where { $_.NetworkOSPath -like "*$dpName*"; })
+    $Date = [DateTime]::Now.AddYears(31)
+    Add-CMDistributionPoint -InputObject $DP `
+                            -InstallInternetServer `
+                            -ClientConnectionType "Intranet" `
+                            -Description "Main Headquarters DP" `
+                            -EnableAnonymous `
+                            -EnablePxe `
+                            -AllowPxeResponse `
+                            -EnableUnknownComputerSupport `
+                            -CertificateExpirationTimeUtc $Date `
+                            -AddBoundaryGroupName $boundaryGroupName;
+}
+
+Function setup_Boundary_Groups($boundaryGroupName, $boundaryGroupDescription, $siteSystemServer) {
+     New-CMBoundaryGroup -Name $boundaryGroupName -Description $boundaryGroupDescription -DefaultSiteCode $CM_SITE_CODE -AddSiteSystemServer $siteSystemServer
 }
 
 
@@ -68,7 +101,7 @@ setup_SCCM_Service_Account "ConfigUser" "Password1";
 setup_Discovery_Method_System $CM_SITE_CODE "30" $DOMAIN_ROOT;
 setup_Discovery_Method_User   $CM_SITE_CODE "30" $DOMAIN_ROOT;
 setup_Discovery_Method_Group  $CM_SITE_CODE "30" $DOMAIN_ROOT;
-
+clear_All_Discovery_Methods $DOMAIN_ROOT;
 
 <#
 Set-CMDiscoveryMethod -ActiveDirectorySystemDiscovery [-SiteCode <string>] [-Enabled <bool>] [-PollingSchedule <IResultObject#SMS_ScheduleToken>] [-EnableDeltaDiscovery <bool>] 
