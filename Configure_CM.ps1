@@ -65,9 +65,9 @@ Function setup_Boundary_Groups() {
 }
 
 
-#import_CM_Module;
-#connect_To_CM_Drive;
-#setup_SCCM_Service_Account "ConfigUser" "Password1";
+import_CM_Module;
+connect_To_CM_Drive;
+setup_SCCM_Service_Account "ConfigUser" "Password1";
 setup_Discovery_Method_System $CM_SITE_CODE "30" $DOMAIN_ROOT;
 setup_Discovery_Method_User   $CM_SITE_CODE "30" $DOMAIN_ROOT;
 setup_Discovery_Method_Group  $CM_SITE_CODE "30" $DOMAIN_ROOT;
