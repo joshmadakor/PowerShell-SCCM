@@ -91,25 +91,33 @@ Function add_Distribution_Point($dpName, $boundaryGroupName) {
 }
 
 Function setup_Boundary_Groups($boundaryGroupName, $boundaryGroupDescription, $siteSystemServer) {
-     New-CMBoundaryGroup -Name $boundaryGroupName -Description $boundaryGroupDescription -DefaultSiteCode $CM_SITE_CODE -AddSiteSystemServer $siteSystemServer
+     New-CMBoundaryGroup -Name $boundaryGroupName `
+                         -Description $boundaryGroupDescription `
+                         -DefaultSiteCode $CM_SITE_CODE `
+                         -AddSiteSystemServer $siteSystemServer;
 }
 
+Function create_Application($appName, $appDescription, $appPublisher, $appVersion) {
+    New-CMApplication -Name $appName `
+                      -Description $appDescription `
+                      -Publisher $appPublisher `
+                      -SoftwareVersion $appVersion;
+}
+
+Function create_Deployment_Type_MSI($applicationName, $msiLocation) {
+   Add-CMDeploymentType -MsiInstaller `
+                        -ApplicationName $applicationName `
+                        -AutoIdentifyFromInstallationFile `
+                        -ContentLocation $msiLocation `
+                        -InstallationBehaviorType "InstallForSystem";
+}
 
 import_CM_Module;
 connect_To_CM_Drive;
-setup_SCCM_Service_Account "ConfigUser" "Password1";
-setup_Discovery_Method_System $CM_SITE_CODE "30" $DOMAIN_ROOT;
-setup_Discovery_Method_User   $CM_SITE_CODE "30" $DOMAIN_ROOT;
-setup_Discovery_Method_Group  $CM_SITE_CODE "30" $DOMAIN_ROOT;
-clear_All_Discovery_Methods $DOMAIN_ROOT;
-
-<#
-Set-CMDiscoveryMethod -ActiveDirectorySystemDiscovery [-SiteCode <string>] [-Enabled <bool>] [-PollingSchedule <IResultObject#SMS_ScheduleToken>] [-EnableDeltaDiscovery <bool>] 
-    [-DeltaDiscoveryMins <int>] [-AddAdditionalAttribute <string[]>] [-RemoveAdditionalAttribute <string[]>] [-EnableFilteringExpiredLogon <bool>] [-TimeSinceLastLogonDays <int>] 
-    [-EnableFilteringExpiredPassword <bool>] [-TimeSinceLastPasswordUpdateDays <int>] [-ActiveDirectoryContainer <string[]>] [-Recursive] [-IncludeGroup] [-ClearActiveDirectoryContainer] 
-    [-RemoveActiveDirectoryContainer <string[]>] [-AddActiveDirectoryContainer <string[]>] [-PassThru] [-DisableWildcardHandling] [-ForceWildcardHandling] [-WhatIf] [-Confirm]  
-    [<CommonParameters>]
-
-    $Schedule = New-CMSchedule -RecurInterval Minutes -Start "2012/10/20 00:00:00" -End "2013/10/20 00:00:00" -RecurCount 10
-
-#>
+#setup_SCCM_Service_Account "ConfigUser" "Password1";
+#setup_Discovery_Method_System $CM_SITE_CODE "30" $DOMAIN_ROOT;
+#setup_Discovery_Method_User   $CM_SITE_CODE "30" $DOMAIN_ROOT;
+#setup_Discovery_Method_Group  $CM_SITE_CODE "30" $DOMAIN_ROOT;
+#clear_All_Discovery_Methods $DOMAIN_ROOT;
+create_Application "Google Chrome" "The best browser" "Gewgol" "6.9"
+create_Deployment_Type_MSI "Google Chrome" "\\sccm\c$\_Content\_Apps\_Chrome\GoogleChromeStandaloneEnterprise64.msi"
